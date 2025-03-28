@@ -1,0 +1,46 @@
+<!DOCTYPE html> 
+<html lang="en" style="font-size: 34px;"> 
+    <head> 
+        <meta charset="UTF-8"/> 
+        <title>Title</title>         
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=ABeeZee&display=swap"/>
+    </head>     
+    <body> 
+        <div class="container"> 
+            <div class="row"> 
+                <div class="col-md-12"> 
+                    <p id="javatime" style="text-align: center; font-family: 'ABeeZee', sans-serif; font-weight: 700; font-size: 55px; color: #e2e2e2;"> </p>
+                </div>
+            </div>
+              <div class="row">
+                <div class="col-md-12">
+                    <p id="javatime2" style="text-align: center; font-family: 'ABeeZee', sans-serif; font-weight: 700; font-size: 55px; color: #e2e2e2;"> </p>
+                </div>
+            </div>
+        </div>         
+    </body>     
+    <script>
+
+
+function setDate() {
+
+    // Creating a Date object
+const dateObj = new Date();
+
+
+var full_time=dateObj.toTimeString().substring(0, 18)
+console.log(full_time)
+
+
+
+
+  //change html clock time
+
+  document.getElementById('javatime').innerHTML = full_time
+
+}
+
+setInterval(setDate, 1000);
+
+</script>     
+</html>

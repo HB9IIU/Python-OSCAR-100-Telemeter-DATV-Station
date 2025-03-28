@@ -1,0 +1,20 @@
+.blink_me {
+    animation: blinker 1s linear infinite;
+}
+
+@keyframes blinker {
+    30% {
+        opacity: 0;
+    }
+}
+
+#pi_load {
+    width: 100%;
+    background-color: #ddd;
+}
+
+#pi_bar {
+    width: 1%;
+    background-color: #04AA6D;
+    height: 33px;
+}

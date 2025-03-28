@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html class="h-100" lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta content="width=device-width, initial-scale=1" name="viewport"/>
+        <title>DATVSM</title>
+        <link rel="icon" type="image/x-icon" href="/static/img/favicon.ico"/>
+        <link rel="stylesheet" href="/static/fonts/fonts.css"/>
+        <!-- Bootstrap core CSS -->
+        <link href="/static/css/bootstrap.min.css" rel="stylesheet"/>
+        <!-- Custom styles for this template -->
+        <link href="/static/css/sticky-footer-navbar.css" rel="stylesheet"/>
+        <!-- javascript for gauges -->
+        <script src="/static/js/gauge.min.js"></script>
+        <!-- jquery -->
+        <script src="/static/js/jquery.min.js"></script>
+    </head>
+    <body class="d-flex flex-column h-100" onresize="reload_page()">
+        <header>
+            <!-- Fixed navbar -->
+        </header>
+        <!-- Begin page content -->
+        <main class="flex-shrink-0">
+            <div class="container">
+                <div class="row" style="margin-top: 0;">
+                    <div class="col-12 col-lg-6 col-md-12 col-sm-12 col-xl-3 col-xxl-3" style="text-align: center;">
+                        <canvas class="text-center" id="Volt_Meter" style="margin-top: -40px;"></canvas>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+        <script src="/static/js/popper.min.js"></script>
+        <script src="/static/js/bootstrap.min.js"></script>
+    </body>
+    <script>
+
+
+    var VOLTMETER = new RadialGauge({
+        renderTo: 'Volt_Meter',
+        colorPlate: "#00000800",
+        height: 400,
+        units: "",
+        minValue: 12,
+        maxValue: 32,
+        majorTicks: [12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32],
+        startAngle: 90,
+        ticksAngle: 180,
+        needleType: "arrow",
+        needleEnd: 95,
+        needleShadow: true,
+        barWidth: 6,
+        colorBar: '#ececec',
+        colorBarProgress: '#d1d1d1',
+        highlights: false,
+        borders: false,
+        borderShadowWidth: 0,
+        strokeTicks: true,
+        valueBox: false,
+        value: 0,
+        animation: true,
+        animationRule: 'linear',
+        animationDuration: 0,
+        colorMinorTicks: "#8c8989",
+        colorUnits: "black",
+        fontNumbers: "Led",
+        fontUnits: "Led",
+        fontUnitsSize: 55,
+        fontNumbersSize: 26,
+        fontUnitsStyle: "bold",
+        colorNumbers:"rgb(255,255,255)",
+        colorValueText:"rgb(255,255,255)",
+        colorUnits:"rgb(255,255,255)",
+        highlights: [{from: 12, to: 24, color: "rgb(241,221,0)"},
+            {from: 24, to: 28, color: "rgb(80,241,0)"},
+            {from: 28, to: 32, color: "rgb(238,19,19)"}
+        ],
+        highlightsWidth: 12,
+    });
+    <!--
+    var AMMETER = new RadialGauge({
+        renderTo: 'Ampere_Meter',
+        height: 400,
+        units: "",
+        minValue: 0,
+        maxValue: 12,
+        majorTicks: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        startAngle: 90,
+        ticksAngle: 180,
+        needleEnd: 95,
+        needleShadow: true,
+        barWidth: 6,
+        colorBar: '#ececec',
+        colorBarProgress: '#d1d1d1',
+        highlights: false,
+        borders: false,
+        borderShadowWidth: 0,
+        strokeTicks: true,
+        valueBox: false,
+        value: 0,
+        animation: true,
+        animationRule: 'linear',
+        animationDuration: 0,
+        colorMinorTicks: "#8c8989",
+        colorUnits: "black",
+        fontNumbers: "Led",
+        fontUnits: "Led",
+        fontUnitsSize: 55,
+        fontNumbersSize: 26,
+        fontUnitsStyle: "bold",
+        colorNumbers:"rgb(255,255,255)",
+        colorValueText:"rgb(255,255,255)",
+        colorUnits:"rgb(255,255,255)",
+        highlights: [{from: 0, to: 8, color: "rgb(80,241,0)"},
+            {from: 8, to: 10, color: "rgb(241,221,0)"},
+            {from: 10, to: 12, color: "rgb(241,0,0)"}
+        ],
+        highlightsWidth: 10,
+        valueDec: 2,
+
+    });
+    var THERMOMETER_PA = new RadialGauge({
+        renderTo: 'Thermo_Meter_PA',
+        height: 400,
+        units: "°C",
+        minValue: 20,
+        maxValue: 50,
+        majorTicks: [ 20, 25, 30, 35, 40, 45, 50],
+        startAngle: 90,
+        ticksAngle: 180,
+        needleEnd: 95,
+        needleShadow: true,
+        barWidth: 6,
+        colorBar: '#ececec',
+        colorBarProgress: '#d1d1d1',
+        highlights: false,
+        borders: false,
+        borderShadowWidth: 0,
+        strokeTicks: true,
+        valueBox: false,
+        value: 0,
+        animationRule: 'linear',
+        animationDuration: 0,
+        colorMinorTicks: "#8c8989",
+        colorUnits: "black",
+        fontNumbers: "Led",
+        fontUnits: "Led",
+        fontUnitsSize: 55,
+        fontNumbersSize: 26,
+        fontUnitsStyle: "bold",
+        colorNumbers:"rgb(255,255,255)",
+        colorValueText:"rgb(255,255,255)",
+        colorUnits:"rgb(255,255,255)",
+        highlights: [{from: 20, to: 35, color: "rgb(80,241,0)"},
+            {from: 35, to: 45, color: "rgb(241,221,0)"},
+            {from: 45, to: 50, color: "rgb(241,0,0)"}
+        ],
+        highlightsWidth: 10,
+        valueDec: 2,
+
+    });
+    var THERMOMETER_ROOM = new RadialGauge({
+        renderTo: 'Thermo_Meter_Room',
+        height: 400,
+        units: "°C",
+        minValue: -5,
+        maxValue: 35,
+        majorTicks: [-5, 0, 5, 10, 15, 20, 25, 30, 35],
+        startAngle: 90,
+        ticksAngle: 180,
+        needleEnd: 95,
+        needleShadow: true,
+        barWidth: 6,
+        colorBar: '#ececec',
+        colorBarProgress: '#d1d1d1',
+        highlights: false,
+        borders: false,
+        borderShadowWidth: 0,
+        strokeTicks: true,
+        valueBox: false,
+        value: -5,
+        animationRule: 'linear',
+        animationDuration: 0,
+        colorMinorTicks: "#8c8989",
+        colorUnits: "black",
+        fontNumbers: "Led",
+        fontUnits: "Led",
+        fontUnitsSize: 55,
+        fontNumbersSize: 26,
+        fontUnitsStyle: "bold",
+        colorNumbers:"rgb(255,255,255)",
+        colorValueText:"rgb(255,255,255)",
+        colorUnits:"rgb(255,255,255)",
+        highlights: [{from: -5, to: 0, color: "rgb(241,0,0)"},
+            {from: 0, to: 25, color: "rgb(80,241,0)"},
+            {from: 25, to: 35, color: "rgb(241,221,0)"}
+        ],
+        highlightsWidth: 10,
+        valueDec: 2,
+
+    });
+-->
+
+
+
+
+
+    function get_all_values() {
+
+        $.ajax({
+            url: '/askpython',
+            type: "POST",
+            data: JSON.stringify({
+                Instruction: "get_data",
+                Argument_1: 0,
+                Argument_2: 0
+            }),
+            contentType: 'application/json;charset=UTF-8',
+            // If we receive a reply from server
+            success: function (response) {
+                console.log(response);
+                Voltage = response.Voltage.toFixed(1)
+                Current = response.Current.toFixed(1)
+                Temperature_PA= response.Temperature_PA.toFixed(1)
+                Temperature_Ambient= response.Temperature_Ambient.toFixed(1)
+                console.log("Volts: " + Voltage);
+                console.log("Ampere: " + Current);
+                console.log("Temperature PA: " +Temperature_PA);
+                console.log("Temperature Ambient: "+Temperature_Ambient );
+                //VOLTMETER.update({units: VolOLTMETER.update({units: Voltatage.toFixed(1) + ' V', value: Voltage.toFixed(1) ,  animationRule: 'bounce',     animationDuration: 500   });
+                VOLTMETER.value = Voltage
+                VOLTMETER.update({units: Voltage + ' V'});
+                //AMMETER.value = Current
+                //AMMETER.update({units: Current + ' A'});
+                //THERMOMETER_ROOM.value=Temperature_Ambient
+                //THERMOMETER_ROOM.update({units: "AIR:"+Temperature_Ambient + ' °C'});
+                //THERMOMETER_PA.value=Temperature_PA
+                //THERMOMETER_PA.update({units: "PA:"+Temperature_PA + ' °C'});
+            }
+        })
+    }
+
+
+
+
+    const sleepNow = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
+
+
+    async function init_instruments() {
+        var meter_animation_duration =300;
+        VOLTMETER.update({animationDuration: meter_animation_duration});
+        //AMMETER.update({animationDuration: meter_animation_duration});
+        //THERMOMETER_PA.update({animationDuration: meter_animation_duration});
+        //THERMOMETER_ROOM.update({animationDuration: meter_animation_duration});
+
+        VOLTMETER.draw();
+        //AMMETER.draw();
+        //THERMOMETER_PA.draw();
+        //THERMOMETER_ROOM.draw();
+
+        VOLTMETER.value = VOLTMETER.options.maxValue;
+        //AMMETER.value = AMMETER.options.maxValue;
+        //THERMOMETER_PA.value = THERMOMETER_PA.options.maxValue;
+        //THERMOMETER_ROOM.value = THERMOMETER_ROOM.options.maxValue;
+        await sleepNow(meter_animation_duration)
+        VOLTMETER.value = VOLTMETER.options.minValue;
+        //AMMETER.value = AMMETER.options.minValue;
+        //THERMOMETER_PA.value = THERMOMETER_PA.options.minValue;
+        //THERMOMETER_ROOM.value = THERMOMETER_ROOM.options.minValue;
+
+
+        await sleepNow(meter_animation_duration)
+        meter_animation_duration=1000
+        VOLTMETER.update({animationDuration: meter_animation_duration});
+        //AMMETER.update({animationDuration: meter_animation_duration});
+        //THERMOMETER_PA.update({animationDuration: meter_animation_duration});
+        //THERMOMETER_ROOM.update({animationDuration: meter_animation_duration});
+
+
+        get_all_values()
+        setInterval(function () {
+            get_all_values()
+        }, 1000);
+    }
+
+
+
+
+    function reload_page() {
+        console.log("Hello")
+        location.reload();
+    }
+
+
+
+    window.addEventListener('load', function () {
+
+       
+
+        document.fonts.ready
+            .then(() => {
+                init_instruments()
+            })
+            .catch(() => {
+                console.log("Error");
+            });
+    });
+
+
+
+</script>
+</html>

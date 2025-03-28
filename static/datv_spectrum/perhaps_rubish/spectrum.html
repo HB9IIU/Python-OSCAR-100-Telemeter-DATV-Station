@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html class="h-100" lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta content="width=device-width, initial-scale=1" name="viewport"/>
+        <meta content="" name="description"/>
+        <link href="favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+        <title>HB9IIU DATV CONTROLLER</title>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.2/js/bootstrap.min.js" integrity="sha512-HSNvqjhsAxRPvbSBEdXWlkR9uYmJtUvXEyfAvUzlA0uS5SyFZMZdczgz8oPWTz2NUEBaXkIYL4kdrBJkP66jYA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.2/css/bootstrap-grid.min.css" integrity="sha512-0avv+MFzpKKnbCMUg8zcp8IPHHzJ88vGBSDj11Zebt8kMMnMQFZSgTlcybHaHaF+lX5ApypDuVPv0e5iu4w4dw==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+        <!-- Custom styles for this template -->
+        <link href="sticky-footer-navbar.css" rel="stylesheet"/>
+        <link href="daniel.css" rel="stylesheet"/>
+        <!--  FOR THE SPECTRUM -->
+        <script src="u16Websocket.js"></script>
+        <!-- <script src="/static/spectrum/js.cookie.min.js"></script> -->
+        <script src="tooltip.js"></script>
+        <!-- <script src="/static/spectrum/obs-websocket.js"></script> -->
+        <script src="mqttws31.js"></script>
+        <link href="tooltip.css" rel="stylesheet" type="text/css"/>
+        <link href="menu.css" rel="stylesheet" type="text/css"/>
+        <!--
+//<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+Bootstrap Font Icon CSS
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet"/>
+<style></style>
+-->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=ABeeZee&display=swap"/>
+    </head>
+    <body class="d-flex flex-column h-100">
+        <!-- Begin page content -->
+        <main class="flex-shrink-0">
+            <div class="container">
+                <div id="tab_spectrum">
+                    <div id="wf" style="width: 100%;"></div>
+                    <div class="col-xl-7" id="fft-col" style="width: 100%;">
+                        <canvas height="1" id="c" style="height: 550px; background-color: #f0efef; margin-top: -50px;" width="1"></canvas>
+                        <textarea cols="15" id="upf" name="upf" readonly rows="1" style="position : absolute; left :-99999px;">2401.123</textarea>
+                    </div>
+                </div>
+                <div class="alert alert-success" id="Sucessfull_OBS_connection" style="display: none;"><strong>Success!</strong> Successfully connected to OBS.
+                </div>
+                <div class="alert alert-danger" id="No_OBS_connection" style="display: none;"><strong>Could not connect to OBS!</strong> Start
+                    OBS and refresh this page
+                </div>
+                <div class="row">
+                    <div class="col-md-3">
+</div>
+                    <div class="col-md-9" style="padding-left: 20px;">
+                        <!--
+        <iframe height="550px" scrolling="no" src="http://datvcontroller.local/fordatvcontroller/spectrum.html" width="100%"></iframe>
+        -->
+                        <div class="container">
+                            <div class="row" style="margin-bottom: 10px;">
+                                <table style="font-family: 'ABeeZee', sans-serif;">
+                                    <tr>
+                                        <th style="width: 25%; font-size: 18px; padding-left: 10px; text-align: center; font-family: 'ABeeZee', sans-serif;">Uplink</th>
+                                        <th style="font-size: 18px; padding-left: 10px; width: 30%; text-align: center; font-family: 'ABeeZee', sans-serif;">Downlink </th>
+                                        <th style="font-size: 18px; padding-left: 10px; text-align: center; font-family: 'ABeeZee', sans-serif;">Symbol Rate</th>
+                                    </tr>
+                                    <tr>
+                                        <td id="label_uplink_frequency" style="text-align: center; padding-right: 25px; font-size: 18px; padding-left: 15px;">2&apos;400.000
+                                Mhz </td>
+                                        <td id="label_downlink_frequency" style="width: 30%; text-align: center; padding-right: 25px; font-size: 18px; padding-left: 15px;">
+                                10&apos;9750.000 Mhz </td>
+                                        <td id="label_symbol_rate" style="width: 50%; text-align: center; padding-right: 25px; font-size: 18px; padding-left: 15px;">
+                                333 kS </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+    var TX = false;
+    var OBS_connection_status = false;
+    var selected_testcard = 0;
+    var power_slider_value = 0;
+    var target_power = 0;
+    var tick_counter_1 = 0;
+    var tick_counter_2 = 0;
+    var tick_counter_3 = 0;
+    var fec = 34;
+
+    var List_of_OBS_Scene = [];
+    var selected_transition = "Fade";
+    var transition_duration = 5;
+
+    function react_on_symbol_rate_click(value) {
+        switch (value) {
+            case "SR66":
+                symbol_rate_daniel = 66;
+                break;
+            case "SR125":
+                symbol_rate_daniel = 125;
+                break;
+            case "SR250":
+                symbol_rate_daniel = 250;
+                break;
+            case "SR333":
+                symbol_rate_daniel = 333;
+                break;
+            case "SR500":
+                symbol_rate_daniel = 500;
+                break;
+            case "SR1000":
+                symbol_rate_daniel = 1000;
+                break;
+            case "SR1500":
+                symbol_rate_daniel = 1500;
+        }
+        console.log("Clicked", value, symbol_rate_daniel)
+        document.getElementById("label_symbol_rate").innerHTML = symbol_rate_daniel.toFixed(0) + " kS";
+
+    }
+
+    function transmit() {
+        console.log("Transmit");
+        TX=true;
+        // we first check if OBS is connected
+        if (OBS_Connection_Status == false) {
+            $('#Connect_to_OBS_Modal').modal('show');
+            return
+        }
+        // hiding the 'Start' button
+        document.getElementById("button_start").className = "btn btn-secondary d-none";
+        // un-hiding the 'Preparing' button
+        document.getElementById("button_preparing").className = "btn btn-warning ";
+        let sr = 0;
+        let f = 0;
+        if ($('#SR66').prop('checked')) {
+            sr = 66
+        }
+        if ($('#SR125').prop('checked')) {
+            sr = 125
+        }
+        if ($('#SR250').prop('checked')) {
+            sr = 250
+        }
+        if ($('#SR333').prop('checked')) {
+            sr = 333
+        }
+        if ($('#SR500').prop('checked')) {
+            sr = 500
+        }
+        if ($('#SR1000').prop('checked')) {
+            sr = 1000
+        }
+
+TX_frequency=document.getElementById("label_uplink_frequency").innerHTML;
+        const data_array_for_Python = [TX_frequency, sr, fec];
+        console.log("Arry to Python:", data_array_for_Python);
+        $.ajax({
+            url: '/askpython',
+            type: "POST",
+            data: JSON.stringify({
+                Instruction: "Start Transmit OBS stream",
+                Argument_1: data_array_for_Python,
+                Argument_2: 0
+            }),
+            contentType: 'application/json;charset=UTF-8',
+            // If we receive a reply from server
+            success: function (response) {
+                TX = true // need to find for what this is
+                // hiding the 'Preparing' button
+                document.getElementById("button_preparing").className = "btn btn-warning d-none";
+                // un-hiding the 'Broadcasting' button
+                document.getElementById("button_broadcasting").className = "btn btn-danger";
+                console.log("Response:", response)
+                // enabling the slider
+                $("#Power_Slider").data("ionRangeSlider").update({disable: false});
+                //un-hidding the Auto button
+                document.getElementById("autopower_start").className = "btn btn-success ";
+                document.getElementById("bouton_plus").className = "btn btn-light";
+                document.getElementById("bouton_moins").className = "btn btn-light";
+            }
+        })
+
+    }
+
+
+    function spectrum_display() {
+        $("#wf").show(0);
+        $("#no_wf").hide(0);
+        jQuery.getScript("wf.js");
+    }
+
+
+    $(document).ready(function () {
+        console.log("Document Ready")
+        spectrum_display();
+    })
+
+</script>
+
+</body>

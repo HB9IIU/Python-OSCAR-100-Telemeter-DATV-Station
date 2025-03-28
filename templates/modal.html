@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Bootstrap Example</title>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"/>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+
+
+        <div class="container">
+            <h2>Modal Example</h2>
+            <!-- Trigger the modal with a button -->
+            <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#myModal">Open Modal</button>
+            <!-- Modal Overheat Alarm Setting-->
+            <div class="modal fade" id="myModal" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Overheat temperature alarm trigger</h4>
+                        </div>
+                        <div class="modal-body">
+                            <table style="width:100%">
+                                <tbody> 
+                                    <td style="width:10%">
+                                        <img src="../static/img/hot.png" width="45"/>
+                                    </td>
+                                    <td style="width:80%">
+                                        <input type="range" class="form-range" min="35" max="45" step="1" id="customrange3"/>
+                                    </td>
+                                    <td style="width: 10%; text-align: center;" id="demo" class="h2">Mark</td>
+                                </tbody>                                 
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+
+            // to delete the cookie
+            //document.cookie = "username=; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+            let x = document.cookie;
+            console.log("Hello1")
+            console.log(x)
+
+
+            var slider = document.getElementById("customrange3");
+            var output = document.getElementById("demo");
+
+            slider.value= parseInt(document.cookie);
+
+            output.innerHTML = slider.value;
+            console.log("Hello")
+
+            slider.oninput = function() {
+                output.innerHTML = this.value;
+                console.log("Hello2")
+                document.cookie = this.value
+                play()
+
+            }
+
+            function play() {
+                var audio = new Audio('../static/sound/fire.mp3');
+                audio.play();
+            }
+
+
+        </script>
+    </body>
+</html>

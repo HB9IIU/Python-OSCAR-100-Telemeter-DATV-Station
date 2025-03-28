@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1" name="viewport"/>
+    <title>DATVSM</title>
+    <link href="/static/img/favicon.ico" rel="icon" type="image/x-icon"/>
+    <link href="/static/fonts/fonts.css" rel="stylesheet"/>
+    <!-- javascript for gauges -->
+    <script src="/static/js/gauge.min.js"></script>
+    <!-- jquery -->
+    <script src="/static/js/jquery.min.js"></script>
+     <!-- Google fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Aldrich&display=swap"/>
+</head>
+<body>
+<canvas id="Thermo_Meter_PA"></canvas>
+</body>
+<script>
+    const colorPlate = "#00000800";
+    const fontUnitsSize = 55;
+    const fontNumbersSize = 26;
+    const colorNumbers = "rgb(255,255,255)";
+    const colorValueText = "rgb(255,255,255)";
+    const colorUnits = "rgb(255,255,255)";
+    const colorBar= '#ececec';
+    const colorBarProgress='#d1d1d1';
+    const colorMinorTicks= "#8c8989";
+    const fontUnits='Aldrich';
+
+    var THERMOMETER_PA = new RadialGauge({
+        renderTo: 'Thermo_Meter_PA',
+        colorPlate: colorPlate,
+        height: 400,
+        units: "°C",
+        minValue: 20,
+        maxValue: 50,
+        majorTicks: [ 20, 25, 30, 35, 40, 45, 50],
+        startAngle: 90,
+        ticksAngle: 180,
+        needleEnd: 95,
+        needleShadow: true,
+        barWidth: 6,
+        colorBar: colorBar,
+        colorBarProgress: colorBarProgress,
+        borders: false,
+        borderShadowWidth: 0,
+        strokeTicks: true,
+        valueBox: false,
+        value: 0,
+        animationRule: 'linear',
+        animationDuration: 0,
+        colorMinorTicks: colorMinorTicks,
+        fontNumbers: fontUnits,
+        fontUnits: fontUnits,
+        fontUnitsSize: 55,
+        fontNumbersSize: 26,
+        fontUnitsStyle: "bold",
+        colorNumbers:colorNumbers,
+        colorValueText:colorValueText,
+        colorUnits:colorUnits,
+        highlights: [{from: 20, to: 35, color: "rgb(80,241,0)"},
+            {from: 35, to: 45, color: "rgb(241,221,0)"},
+            {from: 45, to: 50, color: "rgb(241,0,0)"}
+        ],
+        highlightsWidth: 10,
+        valueDec: 2,
+
+    });
+
+    function get_all_values() {
+
+        $.ajax({
+            url: '/askpython',
+            type: "POST",
+            data: JSON.stringify({
+                Instruction: "get_data",
+                Argument_1: 0,
+                Argument_2: 0
+            }),
+            contentType: 'application/json;charset=UTF-8',
+            success: function (response) {
+                Voltage = response.Voltage.toFixed(1)
+                Current = response.Current.toFixed(1)
+                Temperature_PA = response.Temperature_PA.toFixed(1)
+                Temperature_Ambient = response.Temperature_Ambient.toFixed(1)
+                THERMOMETER_PA.value=Temperature_PA
+                //THERMOMETER_PA.update({units: "PA: "+Temperature_PA + ' °C'});
+                THERMOMETER_PA.update({units: Temperature_PA + ' °C'});
+            }
+        })
+    }
+
+    async function init_instruments() {
+        var meter_animation_duration = 300;
+        THERMOMETER_PA.update({animationDuration: meter_animation_duration});
+        THERMOMETER_PA.draw();
+        THERMOMETER_PA.value = THERMOMETER_PA.options.maxValue;
+        await sleepNow(meter_animation_duration)
+        THERMOMETER_PA.value = THERMOMETER_PA.options.minValue;
+        await sleepNow(meter_animation_duration)
+        meter_animation_duration = 1000
+        THERMOMETER_PA.update({animationDuration: meter_animation_duration});
+
+        get_all_values()
+        setInterval(function () {
+            get_all_values()
+        }, 1000);
+    }
+
+    window.addEventListener('load', function () {
+        document.fonts.ready
+        init_instruments()
+    });
+    const sleepNow = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
+
+</script>
+</html>

@@ -1,0 +1,10 @@
+MAC
+pyinstaller --onefile --clean --name "HB9IIU Telemeter" --icon favicon.ico --noconsole --add-data 'templates:templates' --add-data 'static:static' TelemeterApp.py
+
+WINDOWS
+
+first go to the app folder
+cd "C:\Users\Daniel\SynologyDrive\00 Central Python Apps\00_TELEMETER_ONLY"
+
+and then
+"C:\Users\Daniel\SynologyDrive\00 Central Python Apps\00_TELEMETER_ONLY\venv\Scripts\pyinstaller.exe" -w -F --onefile --clean --name "HB9IIU Telemeter V1.8" --noconsole --icon favicon.ico --add-data "templates;templates" --add-data "static;static" TelemeterApp.py

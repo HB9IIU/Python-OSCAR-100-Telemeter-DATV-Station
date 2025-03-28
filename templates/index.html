@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html class="h-100" lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta content="width=device-width, initial-scale=1" name="viewport"/>
+        <title>DATVSM</title>
+        <link rel="icon" type="image/x-icon" href="/static/img/favicon.ico"/>
+        <!-- Bootstrap core CSS -->
+        <link href="/static/css/bootstrap.min.css" rel="stylesheet"/>
+        <!-- Custom styles for this template -->
+        <link href="/static/css/sticky-footer-navbar.css" rel="stylesheet"/>
+        <!-- javascript for gauges -->
+        <script src="/static/js/gauge.min.js"></script>
+        <!-- javascript for chart -->
+        <script src="/static/js/highcharts.js"></script>
+        <!--  FOR THE SPECTRUM -->
+        <script src="/static/datv_spectrum/u16Websocket.js"></script>
+        <!-- jquery -->
+        <script src="/static/js/jquery.min.js"></script>
+        <!-- Google fonts -->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Aldrich&display=swap"/>
+        <audio preload="auto">
+            <source src="/static/sound/fire.mp3" type="audio/mpeg"/>
+            <source src="/static/sound/click.mp3" type="audio/mpeg"/>
+            <source src="/static/sound/amp.mp3" type="audio/mpeg"/>
+        </audio>
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <div id="callsign_in_header" class="container-fluid">
+                    <a id="callsign" class="navbar-brand" href="#">HB9IIU DATV
+            Station Monitor</a>
+                    <button aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler" data-bs-target="#navbarCollapse" data-bs-toggle="collapse" type="button"><span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarCollapse">
+                        <ul class="fs-5 mb-2 mb-md-0 me-auto navbar-nav">
+                            <li id="ptt_button_placeholder" class="invisible nav-item active">
+                                <a aria-current="page" class="nav-link"> <button type="button" class="btn btn-light btn-sm " onclick="Toggle_PTT()" id="PTT_button" style="width: 78px;">PTT ON
+</button> </a>
+                            </li>
+                            <li id="led_placeholder" class=" invisible nav-item active">
+                                <a aria-current="page" class=" nav-link" href="#"> <img id="led" src="../static/img/greyled.png" style="width: 30px;"/></a>
+                            </li>
+                            <li id="pluto_link_placeholder" class=" invisible nav-item active">
+                                <a id="pluto_link" aria-current="page" class="active fs-6 nav-link" href="http://192.168.2.1" target="_blank">Pluto</a>
+                            </li>
+                            <li id="OBS_overlays_placeholder" class=" visible nav-item active">
+                                <a id="obs_overlays" aria-current="page" class="active fs-6 nav-link" href="www.google.com" target="_blank">OBS Overlays</a>
+                            </li>
+
+                        </ul>
+                    </div><a id="ALarm_Setting:Placeholder" class="fs-5 navbar-brand" href="#"><button type="button" onclick="show_alarm_setting_modal()" class="btn btn-light btn-sm">Set Alarms</button> <a id="RX_TX_uptime_indicator" class="fs-5 navbar-brand" href="#">Uptime</a>
+                </div>
+            </nav>
+        </header>
+        <!-- Begin page content -->
+        <main class="flex-shrink-0">
+            <div class="container">
+                <div class="row" style="margin-top: 30px;">
+                    <div class="col-12 col-lg-6 col-md-12 col-sm-12 col-xl-3 col-xxl-3" style="text-align: center; margin-bottom: -120px;">
+                        <canvas class="mt-5 mt-lg-5 mt-md-5 mt-sm-5 mt-xxl-2 text-center" id="Volt_Meter" style="font-family: 'Aldrich', sans-serif;"></canvas>
+                    </div>
+                    <div class="col-12 col-lg-6 col-md-12 col-sm-12 col-xl-3 col-xxl-3" style="text-align: center; margin-bottom: -120px;">
+                        <canvas class="mt-lg-5 mt-xxl-2 text-center" id="Ampere_Meter"></canvas>
+                    </div>
+                    <div class="col-12 col-lg-6 col-md-12 col-sm-12 col-xl-3 col-xxl-3" style="text-align: center; margin-bottom: -120px;">
+                        <canvas class="mt-lg-4 mt-xxl-2 text-center" id="Thermo_Meter_PA"></canvas>
+                    </div>
+                    <div class="col-12 col-lg-6 col-md-12 col-sm-12 col-xl-3 col-xxl-3" style="text-align: center; margin-bottom: -120px;">
+                        <canvas class="mt-lg-4 mt-xxl-2 text-center" id="Thermo_Meter_Room"></canvas>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12 col-lg-12 col-md-12 col-sm-12 col-xl-12 col-xxl-12 container pg-empty-placeholder"></div>
+                    <section class="pg-empty-placeholder" height="300 " id="temperature_chart" style="margin-top: 0px; margin-bottom: 20px;"></section>
+                </div>
+                <div class="row">
+                    <p id="Delta_T" style="text-align: center; font-size: 18px; font-family: 'Aldrich', sans-serif;">Delta θ =
+                0°C</p>
+                </div>
+            </div>
+        </main>
+        <div class="container">
+            <div id="tab_spectrum">
+                <div id="wf" style="width: 100%;"></div>
+                <div class="col-xl-7" id="fft-col" style="width: 100%;">
+                    <canvas height="1" id="c" style="height: 550px; background-color: #f0efef; width: 100%;" width="1"></canvas>
+                    <textarea cols="15" id="upf" name="upf" readonly rows="1" style="position : absolute; left :-99999px;">2401.123</textarea>
+                </div>
+            </div>
+            <div class="alert alert-success" id="Sucessfull_OBS_connection" style="display: none;">
+                <strong>Success!</strong> Successfully connected to OBS.
+            </div>
+            <div class="alert alert-danger" id="No_OBS_connection" style="display: none;">
+                <strong>Could not connect to OBS!</strong> Start
+                OBS and refresh this page
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+</div>
+                <div class="col-md-9" style="padding-left: 20px;">
+                    <!--
+        <iframe height="550px" scrolling="no" src="http://datvcontroller.local/fordatvcontroller/spectrum.html" width="100%"></iframe>
+        -->
+                    <div class="container">
+                        <div class="row" style="margin-bottom: 10px;">
+                            <table style="font-family: 'ABeeZee', sans-serif;">
+                                <tr>
+                                    <th style="width: 25%; font-size: 18px; padding-left: 10px; text-align: center; font-family: 'ABeeZee', sans-serif;">Uplink</th>
+                                    <th style="font-size: 18px; padding-left: 10px; width: 30%; text-align: center; font-family: 'ABeeZee', sans-serif;">Downlink </th>
+                                    <th style="font-size: 18px; padding-left: 10px; text-align: center; font-family: 'ABeeZee', sans-serif;">Symbol Rate</th>
+                                </tr>
+                                <tr>
+                                    <td id="label_uplink_frequency" style="text-align: center; padding-right: 25px; font-size: 18px; padding-left: 15px;">2&apos;400.000
+                                Mhz </td>
+                                    <td id="label_downlink_frequency" style="width: 30%; text-align: center; padding-right: 25px; font-size: 18px; padding-left: 15px;">
+                                10&apos;9750.000 Mhz </td>
+                                    <td id="label_symbol_rate" style="width: 50%; text-align: center; padding-right: 25px; font-size: 18px; padding-left: 15px;">
+                                333 kS </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer class="footer mt-auto py-3 bg-light">
+            <div class="container"><span class="text-muted">Ⓒ D.Staempfli 2022</span>
+            </div>
+            <!-- Modal Overheat Alarm Setting-->
+            <div class="modal fade" id="trigger_setting_Modal" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title">Overheat temperature alarm trigger</h4>
+                        </div>
+                        <div class="modal-body">
+                            <table style="width:100%">
+                                <tbody>
+                                    <td style="width:10%">
+                                        <img src="../static/img/hot.png" width="45"/>
+                                    </td>
+                                    <td style="width:75%">
+                                        <input type="range" class="form-range" min="20" max="60" step="1" id="alarm_setting_slider"/>
+                                    </td>
+                                    <td style="width: 15%; text-align: center;" id="trigger_temperature" class="h3"></td>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-header">
+                            <h4 class="modal-title">Overload alarm trigger</h4>
+                        </div>
+                        <div class="modal-body">
+                            <table style="width:100%">
+                                <tbody>
+                                    <td style="width:10%">
+                                        <img src="../static/img/ampere-symbol.png" width="65"/>
+                                    </td>
+                                    <td style="width:75%">
+                                        <input type="range" class="form-range" min="0" max="20" step="1" id="ampere_setting_slider"/>
+                                    </td>
+                                    <td style="width: 15%; text-align: center;" id="amperage_trigger" class="h3"></td>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" onclick="hide_alarm_setting_modal()">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Temperature Alarm Modal -->
+            <div class="modal fade" id="exampleModalCenter" role="dialog" data-backdrop="static" data-keyboard="false" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-body">
+                            <img src="../static/img/smoke.gif" width="100%"/>
+                        </div>
+                        <div class="modal-footer ">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col text-center">
+                                        <button onclick="adjust_trigger_temperature()" class="btn btn-secondary">Adjust Trigger Temperature (or just Stop!)</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Amperage Alarm Modal -->
+            <div class="modal fade" id="Amperage_Alarm_Modal" role="dialog" data-backdrop="static" data-keyboard="false" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <div class="modal-body">
+                            <img src="../static/img/ammeter.gif" width="100%"/>
+                        </div>
+                        <div class="modal-footer ">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col text-center">
+                                        <button onclick="adjust_amperage_trigger_value()" class="btn btn-secondary">Increase Trigger Amperage (or just Stop!)</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+        <script src="/static/js/popper.min.js"></script>
+        <script src="/static/js/bootstrap.min.js"></script>
+    </body>
+    <script>
+
+    var adjusting_trigger_temperature = false;
+    const fontUnits = 'Aldrich';
+    const fontNumbers = 'Aldrich';
+    var VOLTMETER = new RadialGauge({
+        renderTo: 'Volt_Meter',
+        height: 400,
+        units: "",
+        minValue: 22,
+        maxValue: 32,
+        majorTicks: [22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32],
+        startAngle: 90,
+        ticksAngle: 180,
+        needleType: "arrow",
+        needleEnd: 95,
+        needleShadow: true,
+        barWidth: 6,
+        colorBar: '#ececec',
+        colorBarProgress: '#d1d1d1',
+        borders: false,
+        borderShadowWidth: 0,
+        strokeTicks: true,
+        valueBox: false,
+        value: 0,
+        animation: true,
+        animationRule: 'linear',
+        animationDuration: 0,
+        colorMinorTicks: "#8c8989",
+        colorUnits: "black",
+        fontNumbers: fontNumbers,
+        fontUnits: fontUnits,
+        fontUnitsSize: 36,
+        fontUnitsStyle: "bold",
+        highlights: [{from: 22, to: 25, color: "rgb(241,221,0)"},
+            {from: 25, to: 29, color: "rgb(80,241,0)"},
+            {from: 29, to: 30, color: "rgb(241,221,0)"},
+            {from: 30, to: 32, color: "rgb(238,19,19)"}
+        ],
+        highlightsWidth: 10,
+        valueDec: 2,
+    });
+    var AMMETER = new RadialGauge({
+        renderTo: 'Ampere_Meter',
+        height: 400,
+        units: "",
+        minValue: 0,
+        maxValue: 15,
+        majorTicks: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,13,14,15],
+        startAngle: 90,
+        ticksAngle: 180,
+        needleEnd: 95,
+        needleShadow: true,
+        barWidth: 6,
+        colorBar: '#ececec',
+        colorBarProgress: '#d1d1d1',
+        borders: false,
+        borderShadowWidth: 0,
+        strokeTicks: true,
+        valueBox: false,
+        value: 0,
+        animation: true,
+        animationRule: 'linear',
+        animationDuration: 0,
+        colorMinorTicks: "#8c8989",
+        colorUnits: "black",
+        fontNumbers: fontNumbers,
+        fontUnits: fontUnits,
+        fontUnitsSize: 36,
+        fontUnitsStyle: "bold",
+        highlights: [{from: 0, to: 8, color: "rgb(80,241,0)"},
+            {from: 8, to: 12, color: "rgb(241,221,0)"},
+            {from: 12, to: 15, color: "rgb(241,0,0)"}
+        ],
+        highlightsWidth: 10,
+        valueDec: 2,
+
+    });
+    var THERMOMETER_PA = new RadialGauge({
+        renderTo: 'Thermo_Meter_PA',
+        height: 400,
+        units: "°C",
+        minValue: 20,
+        maxValue: 50,
+        majorTicks: [20, 25, 30, 35, 40, 45, 50],
+        startAngle: 90,
+        ticksAngle: 180,
+        needleEnd: 95,
+        needleShadow: true,
+        barWidth: 6,
+        colorBar: '#ececec',
+        colorBarProgress: '#d1d1d1',
+        borders: false,
+        borderShadowWidth: 0,
+        strokeTicks: true,
+        valueBox: false,
+        value: 0,
+        animationRule: 'linear',
+        animationDuration: 0,
+        colorMinorTicks: "#8c8989",
+        colorUnits: "black",
+        fontUnitsSize: 36,
+        fontNumbers: fontNumbers,
+        fontUnits: fontUnits,
+        fontUnitsStyle: "bold",
+        highlights: [{from: 20, to: 35, color: "rgb(80,241,0)"},
+            {from: 35, to: 45, color: "rgb(241,221,0)"},
+            {from: 45, to: 50, color: "rgb(241,0,0)"}
+        ],
+        highlightsWidth: 10,
+        valueDec: 2,
+
+    });
+    var THERMOMETER_ROOM = new RadialGauge({
+        renderTo: 'Thermo_Meter_Room',
+        height: 400,
+        units: "°C",
+        minValue: -5,
+        maxValue: 35,
+        majorTicks: [-5, 0, 5, 10, 15, 20, 25, 30, 35],
+        startAngle: 90,
+        ticksAngle: 180,
+        needleEnd: 95,
+        needleShadow: true,
+        barWidth: 6,
+        colorBar: '#ececec',
+        colorBarProgress: '#d1d1d1',
+        borders: false,
+        borderShadowWidth: 0,
+        strokeTicks: true,
+        valueBox: false,
+        value: -5,
+        animationRule: 'linear',
+        animationDuration: 0,
+        highlights: [{from: -5, to: 0, color: "rgb(241,0,0)"},
+            {from: 0, to: 25, color: "rgb(80,241,0)"},
+            {from: 25, to: 35, color: "rgb(241,221,0)"}
+        ],
+        colorMinorTicks: "#8c8989",
+        colorUnits: "black",
+        fontUnitsSize: 36,
+        fontNumbers: fontNumbers,
+        fontUnits: fontUnits,
+        fontUnitsStyle: "bold",
+        highlightsWidth: 10,
+        valueDec: 2,
+
+    });
+    var temperature_slider = document.getElementById("alarm_setting_slider");
+    var temperature_output = document.getElementById("trigger_temperature");
+    var amperage_slider = document.getElementById("ampere_setting_slider");
+    var amperage_output =document.getElementById("amperage_trigger");
+var chartY;  // global chart reference
+function init_temperature_chart() {
+    chartY = Highcharts.chart('temperature_chart', {
+        credits: { enabled: false },
+        chart: {
+            backgroundColor: '#FCFFC5',
+            height: 500,
+            borderWidth: 1,
+            borderColor: "rgb(140,137,137)",
+            plotBorderWidth: 1,
+            style: { fontFamily: 'Aldrich' }
+        },
+        legend: {
+            align: 'center',
+            verticalAlign: 'bottom',
+            layout: 'horizontal',
+            itemStyle: { fontSize: '14px' },
+        },
+        time: { useUTC: false },
+        title: {
+            y: 20,
+            margin: 10,
+            text: 'xxx   ',
+            style: { color: "#FCFFC5" }
+        },
+        xAxis: {
+            type: 'datetime',
+            tickInterval: 60000,
+            gridLineWidth: 1,
+            labels: {
+                style: {
+                    color: 'black',
+                    fontSize: '14px'
+                }
+            }
+        },
+
+      plotOptions: {
+    series: {
+        type: 'spline',            // ✅ force spline globally
+        animation: true,
+        marker: {
+            enabled: false         // ✅ disable those dots
+        }
+    }
+},
+
+
+
+
+        exporting: { enabled: false },
+        yAxis: [
+            {
+                labels: {
+                    format: '{value}°C',
+                    style: { color: "black", fontSize: '14px' }
+                },
+                title: {
+                    text: 'Temperature',
+                    style: { color: "black", fontSize: '18px' }
+                }
+            },
+            {
+                labels: {
+                    format: '{value}A',
+                    style: { color: "black", fontSize: '14px' }
+                },
+                title: {
+                    text: 'Current',
+                    style: { color: "black", fontSize: '18px' }
+                },
+                opposite: true,
+                min: 0,
+                max: 15
+            }
+        ],
+series: [
+    { yAxis: 0, name: 'PA Temperature', type: 'spline', data: [], color: 'red' },
+    { yAxis: 0, name: 'Air Temperature', type: 'spline', data: [], color: 'blue' },
+    { yAxis: 1, name: 'Current', type: 'spline', data: [], color: 'purple' }
+]
+    });
+}
+function update_temperature_chart() {
+    $.ajax({
+        url: '/askpython',
+        type: "POST",
+        data: JSON.stringify({ Instruction: "get_data_for_chart", Argument_1: 0, Argument_2: 0 }),
+        contentType: 'application/json;charset=UTF-8',
+        success: function (response) {
+            var PA_Temperature = response[0];
+            var AIR_Temperature = response[1];
+            var Current = response[2];
+
+            chartY.series[0].setData(PA_Temperature, true);
+            chartY.series[1].setData(AIR_Temperature, true);
+            chartY.series[2].setData(Current, true);
+        },
+        error: function (response) {
+            console.log(JSON.stringify(response));
+        }
+    });
+}
+
+    function Toggle_PTT() {
+
+        var status = document.getElementById("PTT_button").innerHTML
+        console.log(status)
+        if (status == "PTT ON") {
+            var ajax_call_instruction = "ON"
+            console.log("Will send OFF to Python....")
+            click.play()
+        } else {
+            var ajax_call_instruction = "OFF"
+            console.log("Will send OFF to Python....")
+            click.play()
+        }
+
+        $.ajax({
+            url: '/askpython',
+            type: "POST",
+            data: JSON.stringify({
+                Instruction: "Control_PTT_Relay",
+                Argument_1: ajax_call_instruction,
+                Argument_2: 0
+            }),
+            contentType: 'application/json;charset=UTF-8',
+            // If we receive a reply from server
+            success: function (response) {
+                console.log(response);
+            }
+        })
+    }
+
+    function get_all_values() {
+
+        $.ajax({
+            url: '/askpython',
+            type: "POST",
+            data: JSON.stringify({
+                Instruction: "get_data",
+                Argument_1: 0,
+                Argument_2: 0
+            }),
+            contentType: 'application/json;charset=UTF-8',
+            // If we receive a reply from server
+            success: function (response) {
+                Voltage = response.Voltage.toFixed(1)
+                Current = response.Current.toFixed(1)
+                Temperature_PA = response.Temperature_PA.toFixed(1)
+                Temperature_Ambient = response.Temperature_Ambient.toFixed(1)
+                Delta_T = (response.Temperature_PA - response.Temperature_Ambient).toFixed(1)
+                RX_Uptime = response.RX_Uptime_duration
+                TX_Uptime = response.TX_Uptime_duration
+                PTT_Status=response.PTT_status
+                /*
+                console.log(response);
+                console.log("RX_Uptime:" + RX_Uptime)
+                console.log("TX_Uptime:" + TX_Uptime)
+                console.log("Volts: " + Voltage);
+                console.log("Ampere: " + Current);
+                console.log("Temperature PA: " + Temperature_PA);
+                console.log("Temperature Ambient: " + Temperature_Ambient);
+                console.log("PTT Status:"+PTT_Status)
+                */
+                VOLTMETER.value = Voltage
+                VOLTMETER.update({units: Voltage + ' V'});
+                AMMETER.value = Current
+                AMMETER.update({units: Current + ' A'});
+                THERMOMETER_ROOM.value = Temperature_Ambient
+                THERMOMETER_ROOM.update({units: "AIR: " + Temperature_Ambient + ' °C'});
+                THERMOMETER_PA.value = Temperature_PA
+                THERMOMETER_PA.update({units: "PA: " + Temperature_PA + ' °C'});
+                document.getElementById("Delta_T").innerHTML = "Delta θ = " + Delta_T + "°C"
+                document.getElementById("RX_TX_uptime_indicator").innerHTML = "TX: " + TX_Uptime + "  |  RX: " + RX_Uptime
+                //PTT Led Handling
+                if (PTT_Status == "ON") {
+                    document.getElementById("PTT_button").innerHTML = "PTT OFF"
+                    document.getElementById('led').src = '../static/img/redled.png'
+                } else {
+                    document.getElementById("PTT_button").innerHTML = "PTT ON"
+                    document.getElementById('led').src = '../static/img/greyled.png'
+                }
+
+                //Alarms handling
+                // console.log("Temperature Alarm Trigger " + temperature_slider.value)
+                var Alarm_Difference = temperature_slider.value - Temperature_PA
+                //console.log("Diff. with PA temp:" + Alarm_Difference)
+
+                if (adjusting_trigger_temperature==false){
+                if (Alarm_Difference < 0) {
+                    //console.log("OVERHEAT ALARM");
+                    trigger_overheat_alarm();
+                } else {
+                    //console.log("NO OVERHEAT ALARM")
+                }
+                }
+                // console.log("Overlaod Alarm Trigger " + amperage_slider.value)
+                var Alarm_Difference = amperage_slider.value - Current
+                // console.log("Diff. with actual current:" + Alarm_Difference)
+
+                if (adjusting_trigger_temperature==false){
+                    if (Alarm_Difference < 0) {
+                        //console.log("OVERLOAD ALARM");
+                        trigger_overload_alarm();
+                    } else {
+                        //console.log("NO OVERLOAD ALARM")
+                    }
+                }
+
+
+
+
+            }
+        })
+    }
+
+    const sleepNow = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
+
+    async function init_instruments() {
+        var meter_animation_duration = 300;
+        VOLTMETER.update({animationDuration: meter_animation_duration});
+        AMMETER.update({animationDuration: meter_animation_duration});
+        THERMOMETER_PA.update({animationDuration: meter_animation_duration});
+        THERMOMETER_ROOM.update({animationDuration: meter_animation_duration});
+
+        VOLTMETER.draw();
+        AMMETER.draw();
+        THERMOMETER_PA.draw();
+        THERMOMETER_ROOM.draw();
+
+        VOLTMETER.value = VOLTMETER.options.maxValue;
+        AMMETER.value = AMMETER.options.maxValue;
+        THERMOMETER_PA.value = THERMOMETER_PA.options.maxValue;
+        THERMOMETER_ROOM.value = THERMOMETER_ROOM.options.maxValue;
+        await sleepNow(meter_animation_duration)
+        VOLTMETER.value = VOLTMETER.options.minValue;
+        AMMETER.value = AMMETER.options.minValue;
+        THERMOMETER_PA.value = THERMOMETER_PA.options.minValue;
+        THERMOMETER_ROOM.value = THERMOMETER_ROOM.options.minValue;
+
+        await sleepNow(meter_animation_duration)
+        meter_animation_duration = 1000
+        VOLTMETER.update({animationDuration: meter_animation_duration});
+        AMMETER.update({animationDuration: meter_animation_duration});
+        THERMOMETER_PA.update({animationDuration: meter_animation_duration});
+        THERMOMETER_ROOM.update({animationDuration: meter_animation_duration});
+
+        get_all_values()
+        setInterval(function () {
+            get_all_values()
+        }, 1000);
+
+    }
+
+    function get_PTT_status() {
+        $.ajax({
+            url: '/askpython',
+            type: "POST",
+            data: JSON.stringify({
+                Instruction: "Get_PTT_Status",
+                Argument_1: 0,
+                Argument_2: 0
+            }),
+            contentType: 'application/json;charset=UTF-8',
+            // If we receive a reply from server
+            success: function (response) {
+                console.log(response);
+                status = response
+                if (status == "1") {
+                    document.getElementById("PTT_button").innerHTML = "PTT OFF"
+                    document.getElementById('led').src = '../static/img/redled.png'
+                } else {
+                    document.getElementById("PTT_button").innerHTML = "PTT ON"
+                    document.getElementById('led').src = '../static/img/greyled.png'
+                }
+            }
+        })
+    }
+
+    function get_Callsign() {
+        $.ajax({
+            url: '/askpython',
+            type: "POST",
+            data: JSON.stringify({
+                Instruction: "get_callsign",
+                Argument_1: 0,
+                Argument_2: 0
+            }),
+            contentType: 'application/json;charset=UTF-8',
+            // If we receive a reply from server
+            success: function (response) {
+                //console.log(response);
+                document.getElementById("callsign").innerHTML = response
+            }
+        })
+    }
+
+    function get_webinterface_settings() {
+        $.ajax({
+            url: '/askpython',
+            type: "POST",
+            data: JSON.stringify({
+                Instruction: "get_webinterface_settings",
+                Argument_1: 0,
+                Argument_2: 0
+            }),
+            contentType: 'application/json;charset=UTF-8',
+            // If we receive a reply from server
+            success: function (response) {
+                console.log(response);
+                if (response.Show_PTT_Button == true) {
+                    $('#ptt_button_placeholder').removeClass('invisible');
+                    $('#ptt_button_placeholder').addClass('visible');
+                    $('#led_placeholder').removeClass('invisible');
+                    $('#led_placeholder').addClass('visible');
+                }
+                if (response.Show_Link_to_Pluto == true) {
+                    $('#pluto_link_placeholder').removeClass('invisible');
+                    $('#pluto_link_placeholder').addClass('visible');
+
+                }
+
+                $('#pluto_link').attr('href', "http://" + response.Pluto_IP);
+
+                //document.getElementById("callsign").innerHTML = response
+            }
+        })
+    }
+
+    function show_alarm_setting_modal() {
+        adjusting_trigger_temperature=true;
+        $('#trigger_setting_Modal').modal('show')
+    }
+
+    function hide_alarm_setting_modal() {
+        adjusting_trigger_temperature=false;
+        $('#trigger_setting_Modal').modal('hide')
+    }
+
+    function trigger_overheat_alarm() {
+        $('#exampleModalCenter').modal('show')
+            fire_alarm.play()
+    }
+
+    function trigger_overload_alarm() {
+        $('#Amperage_Alarm_Modal').modal('show')
+        overload_alarm.play()
+    }
+
+    function adjust_trigger_temperature(){
+        adjusting_trigger_temperature=true;
+        $('#exampleModalCenter').modal('hide');
+        fire_alarm.pause()
+        $('#trigger_setting_Modal').modal('toggle');
+    }
+
+    function adjust_amperage_trigger_value(){
+        adjusting_trigger_temperature=true;
+        $('#Amperage_Alarm_Modal').modal('hide');
+        overload_alarm.pause()
+        $('#trigger_setting_Modal').modal('toggle');
+    }
+
+
+    // At page load we try to retrieve the cookies
+    var CookieArray = document.cookie.split("|");
+    if (isNaN(parseInt(CookieArray[0]))){
+        console.log ("No Cookie found, will set to defaults")
+        document.cookie="50|15";
+        var CookieArray = document.cookie.split("|");
+    }
+    console.log("Retrieved Cookie Array:",CookieArray[0],CookieArray[1])
+    // Setting the sliders
+    temperature_slider.value = parseInt(CookieArray[0])
+    amperage_slider.value = parseInt(CookieArray[1])
+    temperature_output.innerHTML = parseInt(temperature_slider.value) + "°C";
+    amperage_output.innerHTML = parseInt(amperage_slider.value) + " A";
+
+    temperature_slider.oninput = function () {
+        temperature_output.innerHTML = parseInt(this.value) + "°C";
+        cookie=temperature_slider.value+"|"+amperage_slider.value
+        console.log("setting cookie:",cookie)
+        document.cookie = cookie
+    }
+    amperage_slider.oninput = function () {
+        amperage_output.innerHTML = parseInt(this.value) + " A";
+        cookie=temperature_slider.value+"|"+amperage_slider.value
+        console.log("setting cookie:",cookie)
+        document.cookie = cookie
+    }
+
+
+
+    var fire_alarm = new Audio('../static/sound/fire.mp3');
+    var click = new Audio('../static/sound/click.mp3');
+    var overload_alarm = new Audio('../static/sound/amp.mp3');
+    fire_alarm.preload = "auto"
+    click.preload = "auto"
+
+    window.onresize = function(){ location.reload(); }
+
+    window.addEventListener('load', function () {
+    document.fonts.ready.then(function () {
+        console.log('All fonts in use by visible text have loaded.');
+        init_temperature_chart();     // ← only once
+        update_temperature_chart();   // ← first data fetch
+        setInterval(update_temperature_chart, 5000); // ← update regularly
+
+        init_instruments();
+        get_Callsign();
+        get_webinterface_settings();
+
+        $("#wf").show(0);
+        $("#no_wf").hide(0);
+        jQuery.getScript("/static/datv_spectrum/wf.js");
+    });
+});
+
+
+
+
+
+    </script>
+</html>

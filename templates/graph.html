@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html class="h-100" lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta content="width=device-width, initial-scale=1" name="viewport"/>
+        <title>DATVSM</title>
+        <link href="/static/img/favicon.ico" rel="icon" type="image/x-icon"/>
+        <link href="/static/fonts/fonts.css" rel="stylesheet"/>
+        <!-- Bootstrap core CSS -->
+        <link href="/static/css/bootstrap.min.css" rel="stylesheet"/>
+        <!-- Custom styles for this template -->
+        <link href="/static/css/sticky-footer-navbar.css" rel="stylesheet"/>
+        <!-- javascript for chart -->
+        <script src="/static/js/highcharts.js"></script>
+        <!-- jquery -->
+        <script src="/static/js/jquery.min.js"></script>
+    </head>
+    <body class="d-flex flex-column h-100" onresize="reload_page()">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <div class="container-fluid"><a class="navbar-brand" href="#">HB9IIU DATV Station Monitor</a>
+                    <button aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler" data-bs-target="#navbarCollapse" data-bs-toggle="collapse" type="button">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarCollapse">
+                        <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                            <li class="nav-item active"><a aria-current="page" class="nav-link"> <button class="btn btn-light btn-sm" id="PTT_button" onclick="Clicked_Button()" style="width: 78px;" type="button">PTT ON
+</button> </a>
+                            </li>
+                            <li class="nav-item active"><a aria-current="page" class="nav-link" href="#"> <img id="led" src="../static/img/greyled.png" style="width: 30px;"/></a>
+                            </li>
+                            <li class="nav-item"><a class="nav-link" href="index.html">Radial</a>
+                            </li>
+                            <li class="nav-item"><a class="nav-link" href="#">Linear</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+        <!-- Begin page content -->
+        <main class="flex-shrink-0">
+            <div class="container">
+                <div class="row" style="margin-top: 15px;">
+                    <div class="container pg-empty-placeholder"></div>
+                    <section class="pg-empty-placeholder" height="300 " id="temperature_chart" style="margin-top: 10px; margin-bottom: 20px;"></section>
+                </div>
+            </div>
+        </main>
+        <footer class="footer mt-auto py-3 bg-light">
+            <div class="container"><span class="text-muted">Ⓒ D.Staempfli 2022</span>
+            </div>
+        </footer>
+        <script src="/static/js/popper.min.js"></script>
+        <script src="/static/js/bootstrap.min.js"></script>
+    </body>
+    <script>
+
+var chartY;  // Global chart reference
+function init_temperature_chart() {
+    chartY = Highcharts.chart('temperature_chart', {
+        credits: { enabled: false },
+        chart: {
+            backgroundColor: '#FCFFC5',
+            height: 600,
+            borderWidth: 1,
+            borderColor: "rgb(140,137,137)",
+            plotBorderWidth: 1
+        },
+        legend: {
+            align: 'center',
+            verticalAlign: 'top',
+            layout: 'vertical'
+        },
+        time: { useUTC: false },
+        title: {
+            y: 20,
+            margin: 10,
+            text: 'Temperature & Current Over Time',
+            style: { fontSize: '18px' }
+        },
+        xAxis: {
+            type: 'datetime',
+            tickInterval: 60000,
+            gridLineWidth: 1,
+            labels: {
+                style: {
+                    color: 'black',
+                    fontSize: '14px'
+                }
+            }
+        },
+        yAxis: [
+            {
+    labels: {
+        format: '{value}°C',
+        style: {
+            color: "black",
+            fontSize: '14px'
+        }
+    },
+    title: {
+        text: 'Temperature',
+        style: {
+            color: "black",
+            fontSize: '16px'
+        }
+    },
+    max: 45,  // ✅ Set temperature max to 45°C
+                min: 10
+},
+            {
+                labels: {
+                    format: '{value}A',
+                    style: {
+                        color: "black",
+                        fontSize: '14px'
+                    }
+                },
+                title: {
+                    text: 'Current',
+                    style: {
+                        color: "black",
+                        fontSize: '16px'
+                    }
+                },
+                opposite: true,
+                min: 0,
+                max: 12   // ✅ You asked for 12A max here
+            }
+        ],
+        tooltip: {
+            valueDecimals: 1,
+            backgroundColor: '#FCFFC5'
+        },
+        plotOptions: {
+            series: {
+                type: 'spline',      // ✅ default to spline
+                marker: { enabled: false },
+                animation: false
+            }
+        },
+        series: [
+            { yAxis: 0, name: 'PA Temperature', data: [], color: 'red' },
+            { yAxis: 0, name: 'Air Temperature', data: [], color: 'blue' },
+            { yAxis: 1, name: 'Current', data: [], color: 'black' }
+        ]
+    });
+}
+
+function update_temperature_chart() {
+    $.ajax({
+        url: '/askpython',
+        type: "POST",
+        data: JSON.stringify({ Instruction: "get_data_for_chart", Argument_1: 0, Argument_2: 0 }),
+        contentType: 'application/json;charset=UTF-8',
+        success: function (response) {
+            var PA_Temperature = response[0];
+            var AIR_Temperature = response[1];
+            var Current = response[2];
+
+            chartY.series[0].setData(PA_Temperature, true);
+            chartY.series[1].setData(AIR_Temperature, true);
+            chartY.series[2].setData(Current, true);
+        },
+        error: function (response) {
+            console.log("AJAX error:", JSON.stringify(response));
+        }
+    });
+}
+
+    function Clicked_Button() {
+
+        var status = document.getElementById("PTT_button").innerHTML
+        console.log(status)
+        if (status == "PTT ON") {
+            document.getElementById("PTT_button").innerHTML = "PTT OFF"
+            document.getElementById('led').src = '../static/img/redled.png'
+            var relay_status = 1
+        } else {
+            document.getElementById("PTT_button").innerHTML = "PTT ON"
+            var relay_status = 0
+            document.getElementById('led').src = '../static/img/greyled.png'
+
+        }
+
+        $.ajax({
+            url: '/askpython',
+            type: "POST",
+            data: JSON.stringify({
+                Instruction: "Control_PTT_Relay",
+                Argument_1: relay_status,
+                Argument_2: 0
+            }),
+            contentType: 'application/json;charset=UTF-8',
+            // If we receive a reply from server
+            success: function (response) {
+                console.log(response);
+            }
+        })
+
+
+    }
+
+
+
+
+
+    function reload_page() {
+        console.log("Hello")
+        location.reload();
+    }
+
+
+
+window.addEventListener('load', function () {
+
+
+    document.fonts.ready.then(() => {
+        init_temperature_chart();       // ⬅ initialize once
+
+        setTimeout(() => {
+            update_temperature_chart();     // ⬅ slight delay after PTT
+            setInterval(update_temperature_chart, 5000);  // ⬅ update regularly
+        }, 100);  // ⏱️ 100ms delay
+    });
+});
+
+
+</script>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <title>For OBS</title>
+        <style>table.center { margin-left: auto; margin-right: auto; }</style>
+        <style>body { background-color: rgba(0,0,0,0)!important; }</style>
+        <link href="../css/theme.css" rel="stylesheet" type="text/css"/>
+        <link href="../static/css/style.css" rel="stylesheet"/>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=ABeeZee&display=swap"/>
+    </head>
+    <body onload="page_loaded()" style="color: #e05f5f; background-color: #ffffff;">
+        <table class="center">
+            <tr>
+                <td id="temp" style="text-align: center; font-family: 'ABeeZee', sans-serif;  color: #ffffff; font-size: 45px;">Temp: 23.7°C</td>
+                <td width="10px" ""> </td>
+                <td id="hum" style="text-align: center; font-family: 'ABeeZee', sans-serif; color: #ffffff; font-size: 45px;">Hum: 56%</td>
+            </tr>
+        </table>
+        <h4 id="dragino_time" style="text-align: center; font-family: 'ABeeZee', sans-serif; font-size: 45px; color: #fbf1f1;">unix time</h4>
+    </body>
+</html>
+<script>
+
+
+
+    function get_data() {
+        $.ajax({
+            url: '/askpython',
+            type: "POST",
+            data: JSON.stringify({Instruction: "get_lorawan_temp_and_hum", Argument_1: 1, Argument_2: 2}),
+            contentType: 'application/json;charset=UTF-8',
+            // If we receive a reply from server
+            success: function (response) {
+                console.log(response)
+                document.getElementById("temp").innerHTML = "Temp: " +response.temperature +"°C";
+                document.getElementById("hum").innerHTML = "Hum: " +response.humidity +"%";
+                document.getElementById("dragino_time").innerHTML =  response.hhmmss_time ;
+
+
+
+            },
+            // If we FAIL to receive a reply from server
+            error: function (response) {
+                console.log(JSON.stringify(response));
+                console.log("Something went wrong");
+            }
+        })
+    }
+
+
+
+
+
+    function page_loaded(){
+        console.log("page_loaded")
+        get_data()
+        setInterval(get_data, 1000*60*3);
+    }
+
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>

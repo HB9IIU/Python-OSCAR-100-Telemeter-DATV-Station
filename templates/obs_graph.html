@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html class="h-100" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1" name="viewport"/>
+    <title>DATVSM</title>
+    <link href="/static/img/favicon.ico" rel="icon" type="image/x-icon"/>
+    <!-- javascript for chart -->
+    <script src="/static/js/highcharts.js"></script>
+    <!-- jquery -->
+    <script src="/static/js/jquery.min.js"></script>
+    <!-- Google fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Aldrich&display=swap"/>
+</head>
+<body>
+<section class="pg-empty-placeholder" height="300 " id="temperature_chart"
+         style="margin-top: 10px; margin-bottom: 20px;"></section>
+</body>
+<script>
+
+    function plot_temperature_chart() {
+        $.ajax({
+            url: '/askpython',
+            type: "POST",
+            data: JSON.stringify({Instruction: "get_data_for_chart", Argument_1: 0, Argument_2: 0}),
+            contentType: 'application/json;charset=UTF-8',
+            // If we receive a reply from server
+            success: function (response) {
+                console.log(response)
+                var PA_Temperature = response[0];
+                var AIR_Temperature = response[1];
+                var Current = response[2];
+
+                chartY = Highcharts.chart('temperature_chart', {
+                    credits: {
+                        enabled: false
+                    },
+                    chart: {
+                        backgroundColor: '#FCFFC5',
+                        height: 730,
+                        width: 1280,
+                        borderWidth: 0,
+                        borderColor: "rgb(140,137,137)",
+                        plotBorderWidth: 1,
+
+                        style: {
+                            fontFamily: 'Aldrich'
+                        }
+
+
+                    },
+                    legend: {
+                        align: 'center',
+                        verticalAlign: 'top',
+                        layout: 'vertical',
+                        itemStyle: {
+                            fontSize: '18px',
+
+
+                        },
+                    },
+                    time: {
+                        useUTC: false
+                    },
+                    title: {
+                        y: 20,
+                        margin: 10,
+                        text: 'Final PA Temperature & Current Over Time',
+                        style: {
+                            fontSize: '28px',
+                        }
+                    },
+                    xAxis: {
+                        type: 'datetime',
+                        tickInterval: 60000,
+                        gridLineWidth: 1,
+                        labels: {
+                            style: {
+                                color: 'black',
+                                fontSize: '18px'
+                            }
+                        },
+                    },
+                    plotOptions: {
+                        series: {
+                            animation: false
+                        },
+                        spline: {
+                            marker: {
+                                enabled: false
+                            }
+                        }
+                    },
+
+
+                    exporting: {
+                        enabled: false
+                    },
+
+
+                    yAxis: [{
+                        labels: {
+                            format: '{value}°C',
+                            style: {
+                                color: "black",
+                                fontSize: '14px',
+
+                            }
+                        },
+                        title: {
+                            text: 'Temperature',
+                            style: {
+                                color: "black",
+                                fontSize: '18px'
+                            }
+                        }
+
+                    }, {
+                        labels: {
+                            format: '{value}A',
+                            style: {
+                                color: "black",
+                                fontSize: '14px',
+                            }
+                        },
+
+                        title: {
+                            text: 'Current',
+                            style: {
+                                color: "black",
+                                fontSize: '18px'
+                            }
+                        },
+                        opposite: true,
+                    },
+                    ],
+                    tooltip: {
+                        valueDecimals: 0,
+                        valueSuffix: ' °C',
+                        backgroundColor: '#FCFFC5'
+
+                    },
+
+                    series: [{
+                        yAxis: 0,
+                        name: 'PA Temperature',
+                        type: 'spline',
+                        data: PA_Temperature,
+                        color: 'red',
+                        text: 'Temperature',
+
+                    },
+                        {
+                            yAxis: 0,
+                            name: 'Air Temperature',
+                            type: 'spline',
+                            data: AIR_Temperature,
+                            color: 'blue',
+                            text: 'Temperature',
+
+                        },
+
+
+                        {
+                            yAxis: 1,
+                            name: 'Current',
+                            type: 'spline',
+                            data: Current,
+                            color: 'black',
+                        },
+                    ]
+                });
+            },
+            // If we FAIL to receive a reply from server
+            error: function (response) {
+                console.log(JSON.stringify(response));
+                //alert("Something went wrong");
+            }
+        })
+    }
+
+    window.addEventListener('load', function () {
+        plot_temperature_chart()
+        setInterval(function () {
+            plot_temperature_chart()
+        }, 4900);
+    });
+
+
+</script>
+</html>
