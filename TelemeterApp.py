@@ -18,7 +18,7 @@ import serial.tools.list_ports
 from flask import Flask, render_template, request, jsonify
 
 ##########################################################################################
-Version = "Ver. 1.8"
+Version = "Ver. 1.9"
 
 Callsign = "G7VHG"
 Callsign = "HB9IIU"

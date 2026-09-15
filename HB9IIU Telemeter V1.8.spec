@@ -28,7 +28,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='HB9IIU Telemeter V1.8',
+    name='HB9IIU Telemeter V1.9',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
